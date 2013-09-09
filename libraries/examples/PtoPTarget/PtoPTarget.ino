@@ -97,56 +97,24 @@ void loop(void) {
   if(nfc.configurePeerAsTarget()) {
     char thetime[20];
     String bufferr;
-    //sprintf( thetime, "%d-%d-%d %d:%d:%d", year(), month(), day(), hour(), minute(), second() );
     bufferr = String(thetime);
     last_messages = bufferr;
-    Serial.print( "Time:" );
-    Serial.println( thetime );
     
     //trans-receive data
     if(nfc.targetTxRx(DataOut,DataIn)) {
       //prog_uchar last_messages[] = "Received!";
-
-      Serial.print("Sending a request");
       
 #ifdef NFC_DEMO_DEBUG
       void digitalClockDisplay();
-      Serial.print("Reid would you like a.. ");
+      Serial.println("================ Received:");
       Serial.println(DataIn);
+      Serial.println("==========================");
 #endif
 
-      // if you get a connection, report back via serial:
-      if (client.connect(server, port))
-      {
-        Serial.println("connected");
-        // Make a HTTP request:
-        client.print("GET ");
-        client.print(path);
-        client.println(" HTTP/1.0");
-        client.print("Host: ");
-        client.println(server);
-        client.println("Connection: close");
-        client.println("User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; de-de) AppleWebKit/523.10.3 (KHTML, like Gecko) Version/3.0.4 Safari/523.10");
-        client.println("Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7");
-        client.println("Cache-Control: no-cache");
-        client.println("Accept-Language: de,en;q=0.7,en-us;q=0.3");
-        client.println();
-      } 
-      else
-      {
-        // if you didn't get a connection to the server:
-        Serial.println("Request failed :(");
-      }
-      Serial.println();
-      Serial.println("Awaiting Response...");
+      sendRequest();
       
-      // if the server's disconnected, stop the client:
-//      if (!client.available() && !client.connected())
-//      {
-//        Serial.println();
-//        Serial.println("disconnecting.");
-//        client.stop();
-//      }
+      Serial.println("Awaiting Response...");
+      Serial.println();
     }
   }
   
@@ -165,19 +133,57 @@ void loop(void) {
 
 }
 
-int connectGSM()
-{
+int connectGSM() {
+  Serial.println();
+  Serial.println("Connecting to GSM network. This may take up to a few minutes...");
+  
   // Start GSM shield
   while(notConnected)
   {
-    Serial.print(".");
     if( (gsmAccess.begin(PINNUMBER)==GSM_READY) & (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD)==GPRS_READY) ){
       notConnected = false;
-      Serial.println("Connected!");
+      Serial.println("GSM connected!");
     } else {
-      Serial.println("Not connected");
+      Serial.println("GSM failed to connect. retrying...");
       delay(1000);
     }
+  }
+  
+}
+
+int disconnectGSM() {
+  // if the server's disconnected, stop the client:
+  if ( !client.available() && !client.connected() ) {
+    Serial.println();
+    Serial.println("Disconnecting");
+    client.stop();
+  }
+}
+
+int sendRequest() {
+  
+  if( notConnected ){
+    connectGSM();
+  }
+  
+  // if you get a connection, report back via serial:
+  if (client.connect(server, port))
+  {
+    Serial.print("Starting request... ");
+    
+    client.print("GET ");
+    client.print(path);
+    client.println(" HTTP/1.0");
+    client.print("Host: ");
+    client.println(server);
+    client.println("Connection: close");
+    client.println("User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; de-de) AppleWebKit/523.10.3 (KHTML, like Gecko) Version/3.0.4 Safari/523.10");
+    client.println("Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7");
+    client.println("Cache-Control: no-cache");
+    client.println("Accept-Language: de,en;q=0.7,en-us;q=0.3");
+    client.println();
+  } else {
+    Serial.println("Request failed :(");
   }
 }
 
