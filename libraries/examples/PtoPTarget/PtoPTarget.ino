@@ -14,40 +14,53 @@
 #include <SPI.h> // needed for Arduino versions later than 0018
 #endif
 
-#define PINNUMBER ""
+//////////////////////////////////////////
 
+// GPRS
+#define PINNUMBER ""
 #define GPRS_APN       "bluevia.movistar.es"
 #define GPRS_LOGIN     ""
 #define GPRS_PASSWORD  ""
 
+// Payment Endpoint
+char server[] = "instant-dev.herokuapp.com";
+char path[] = "/demo/prototype?transact=credit&source_name=unit_1&target_name=unit_2&amount=1";
+int port = 80;
+
+// Device Mode
+char mode[] = "RECEIVER"; // SENDER
+
+// NFC Response (Receiver)
+char DataOut[]="Receiver: Got it!";
+
+//////////////////////////////////////////
+
+// GPRS Connection
 GSMClient client;
 GPRS gprs;
 GSM gsmAccess(0); // include a 'true' parameter for debug enabled
 GSMScanner scannerNetworks;
+boolean notConnected = true;  
 
-//char server[] = "instant-dev.herokuapp.com";
-//char path[] = "/";
-char server[] = "gist.github.com";
-char path[] = "/Workman/f859afce9c17aed22356/raw/ab5d258f11982cfa092f6501596b70298ed0f98e/gistfile1.txt";
-int port = 80;
-
-
+// NFC
 #define NFC_DEMO_DEBUG 1
 #define PN532_CS 10
 PN532 nfc(PN532_CS);
 
-char DataOut[]="Receiver: Got it!";
+// NFC Response (Receiver)
 char DataIn[16];
 char buffer[32];
 
-// connection state
-boolean notConnected = true;  
+// LED 
+int ledPin = 13;
 
 void setup(void) {
 #ifdef NFC_DEMO_DEBUG
   Serial.begin(9600);
   Serial.println("Starting");
 #endif
+  
+  pinMode(ledPin, OUTPUT);
 
   //setTime(0,0,0,2,6,2013); // Set a test time
 
@@ -84,7 +97,7 @@ void setup(void) {
 }
 
 void loop(void) {
-  
+  Serial.print(".");
   if(nfc.configurePeerAsTarget()) {
     
     //trans-receive data
@@ -103,12 +116,11 @@ void loop(void) {
     }
   }
   
-  while(client.available()){
-    char c = client.read();
-    Serial.print(c);
-  }
+  printClientResponse();
   
 }
+
+
 
 int connectGSM() {
   Serial.println();
@@ -173,6 +185,17 @@ int sendRequest() {
   } else {
     Serial.println("Request failed");
   }
+}
+
+int printClientResponse(){
+  while(client.available()){
+    char c = client.read();
+    Serial.print(c);
+  }
+}
+
+void modeSender(){
+  
 }
 
 // variables created by the build process when compiling the sketch
