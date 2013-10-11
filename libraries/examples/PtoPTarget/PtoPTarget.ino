@@ -39,6 +39,7 @@ char DataOut[]="Receiver: Got it!";
 GSMClient client;
 GPRS gprs;
 GSM gsmAccess(0); // include a 'true' parameter for debug enabled
+GSMBand gsmband;
 GSMScanner scannerNetworks;
 boolean notConnected = true;  
 
@@ -108,12 +109,19 @@ void loop(void) {
       Serial.print("NFC Incoming: ");
       Serial.println(DataIn);
 #endif
-
+      delay(1000);
       sendRequest();
       
       Serial.println("Awaiting Response...");
       Serial.println();
     }
+  }else if(nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A)){
+      Serial.println("Tag Acquired");
+      delay(1000);
+      sendRequest();
+      
+      Serial.println("Awaiting Response...");
+      Serial.println();
   }
   
   printClientResponse();
@@ -125,8 +133,10 @@ void loop(void) {
 int connectGSM() {
   Serial.println();
   Serial.println("Connecting to GSM network. This may take up to a few minutes...");
+
+  gsmband.setBand(GSM_MODE_GSM850_PCS);
   
-  scannerNetworks.begin();
+  //scannerNetworks.begin();
   
   // Start GSM shield
   while(notConnected)
@@ -134,7 +144,7 @@ int connectGSM() {
     if( (gsmAccess.begin(PINNUMBER)==GSM_READY) & (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD)==GPRS_READY) ){
       notConnected = false;
       Serial.print("GSM connected!");
-      statusGSM();
+      //statusGSM();
     } else {
       Serial.println("GSM failed to connect. retrying...");
       delay(1000);
