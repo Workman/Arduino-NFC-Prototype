@@ -37,7 +37,7 @@ void setup(void) {
   nfc.SAMConfig();
 }
 
-char DataOut[]="Hello Face!"; //16bytes
+char DataOut[]="name=unit_1&transact=credit&value=1"; //16bytes
 char DataIn[16];//Should be 16bytes
 void loop(void) {
 
